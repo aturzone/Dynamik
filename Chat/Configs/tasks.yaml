@@ -1,0 +1,23 @@
+taskAnaliyze_task:
+  description: >
+    Monitor project tasks, deadline and responsible teams.
+  expected_output: >
+    The task analysis agent is responsible for monitoring project tasks, deadlines, and responsible teams. It analyzes the project tasks to ensure that they are completed on time and to the highest standard. The agent also monitors the deadlines for each task and coordinates with the responsible teams to ensure that the tasks are completed on time. The task analysis agent plays a critical role in ensuring that the project is completed successfully and on schedule.
+
+risksAnalysis_task:
+  description: >
+    Identify potential risks and develop mitigation strategies.
+  expected_output: >
+    The risks analysis agent is responsible for identifying potential risks and developing mitigation strategies. It analyzes the project to identify potential risks that could impact the project's success and develops strategies to mitigate those risks. The agent works closely with the project team to ensure that the risks are addressed and that the project is completed successfully.
+
+intentDetection_task:
+  description: >
+    Detect the intent of the user's message and return the intent to the chatbot.
+  expected_output: >
+    you need to provide to the ManagerAgent best user intent detection service.
+
+editor_task:
+  description: >
+    Edit and refine the user's message before passing it on to the next agent(ManagerAgent) in the pipeline.
+  expected_output: >
+    The editor agent is responsible for editing and refining the user's message before passing it on to the next agent in the pipeline. It reviews the user's message, corrects any errors, and ensures that it is clear and concise before passing it on to the next agent. The editor agent plays a critical role in ensuring that the user's message is accurately interpreted and processed by the chatbot.
