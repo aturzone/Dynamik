@@ -149,3 +149,5 @@ def train():
         
     except Exception as e:
         raise Exception(f"Error in training: {e}")
+
+#Chat
