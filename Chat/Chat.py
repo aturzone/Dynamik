@@ -22,32 +22,21 @@ class ChatAgent(Agent):
         )
 
     def respond(self, user_input, project_text):
-        # پاسخگویی به احوال‌پرسی‌ها
-        if "hi" in user_input.lower() or "hello" in user_input.lower() or "hey" in user_input.lower():
-            return "Hello! How can I assist you today?"
-
-        if "how are you" in user_input.lower():
-            return "I'm an AI assistant, so I don't have feelings, but I'm here to help you! How can I assist you today?"
-
-        if "i am sad" in user_input.lower():
-            return "I'm sorry to hear that you're feeling sad. If you'd like to talk about it, I'm here to listen."
-
-        if "bye" in user_input.lower() or "goodbye" in user_input.lower():
-            return "Goodbye! Have a great day!"
-
-        if "thank you" in user_input.lower():
-            return "You're welcome! If you have any other questions, feel free to ask."
-
+        # حذف پاسخ‌های از پیش تعیین شده برای احوال‌پرسی‌ها
+        # Headers for the API request
         headers = {"Authorization": f"Bearer {API_KEY}", "Content-Type": "application/json"}
+        
+        # Data for the API request
         data = {
             "model": "exa",
             "messages": [
-                {"role": "system", "content": "you are a helpful AI assistant. Please provide the answer to the following question:"},
+                {"role": "system", "content": "You are a helpful AI assistant. Please provide the answer to the following question:"},
                 {"role": "user", "content": f"You are a friendly and informative AI assistant for answer {user_input}. Use the following project details to answer questions related to the project: {project_text}"}
             ],
             "max_tokens": 150
         }
 
+        # Make the API request
         response = requests.post(EXA_ENDPOINT, json=data, headers=headers)
         
         if response.status_code == 200:
@@ -59,10 +48,8 @@ class ChatAgent(Agent):
                 clean_answer = re.sub(r'http[s]?://\S+', '', raw_answer)
                 clean_answer = re.sub(r'\s+', ' ', clean_answer).strip()
                 return clean_answer
-
             else:
                 return "I'm not sure how to respond to that."
-        
         else:
             print(f"❌ Error {response.status_code}: {response.text}")
             return "Sorry, I encountered an issue while processing your request."
@@ -94,7 +81,6 @@ class CrewAI:
         print("## Welcome to CrewAI\n____________________________")
         while True:
             user_input = input("You: ").strip()
-
 
             if user_input.lower() == "exit":
                 print("Goodbye!")
