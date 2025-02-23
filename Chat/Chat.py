@@ -132,4 +132,4 @@ async def chat(user_input: UserInput, request: Request):
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run("chat:app", host="0.0.0.0", port=8000, reload=True)
+    uvicorn.run("Chat:app", host="0.0.0.0", port=8000, reload=True)
