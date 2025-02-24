@@ -10,9 +10,9 @@ class EditorAgent:
         self.goal = "Edit and improve responses based on feedback."
         self.backstory = "You are an advanced AI editor designed to enhance responses for better accuracy and clarity."
 
-    def respond(self, manager_response, feedback):
+    def respond(self, manager_response, feedback, project_data, optimized_input, detected_intent):
         # Combine response and feedback for editing
-        combined_input = f"Response: {manager_response}\nFeedback: {feedback}"
+        combined_input = f"Response: {manager_response}\nFeedback: {feedback} Project Data: {project_data}\nOptimized Input: {optimized_input}\nDetected Intent: {detected_intent}"
 
         # Headers for the API request
         headers = {"Authorization": f"Bearer {API_KEY}", "Content-Type": "application/json"}
@@ -21,7 +21,7 @@ class EditorAgent:
         data = {
             "model": "exa",
             "messages": [
-                {"role": "system", "content": "You are an AI editor. Please edit the following response based on the feedback:"},
+                {"role": "system", "content": "You are an AI editor. Please edit the following response based on the feedback and context:"},
                 {"role": "user", "content": combined_input}
             ],
             "max_tokens": 150

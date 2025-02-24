@@ -4,12 +4,16 @@ import re
 API_KEY = "9a13c0cd-af75-4f0e-8d70-f8ad6c1ee169"
 EXA_ENDPOINT = "https://api.exa.ai/chat/completions"
 
+with open("project_data.txt", "r") as file:
+    project_data = file.read().strip()
 class OptimizerAgent:
-    def __init__(self):
+    def __init__(self, project_data):
         self.role = "Optimizer"
-        self.description = "An AI-powered agent that optimizes user input."
-        self.goal = "Optimize user input for clarity and completeness."
+        self.description = "An AI-powered agent that optimizes user input based on project data."
+        self.goal = "Optimize user input for clarity and completeness , considering project context."
         self.backstory = "You are an advanced AI optimizer designed to enhance user input for better understanding."
+        self.project_data = project_data
+        
 
     def respond(self, user_input):
         project_name = self.extract_project_name(user_input)
@@ -30,12 +34,14 @@ class OptimizerAgent:
         # Headers for the API request
         headers = {"Authorization": f"Bearer {API_KEY}", "Content-Type": "application/json"}
         
+        contextual_input = f"Project Data: {self.project_data}\nUser Input: {user_input}"
+        
         # Data for the API request
         data = {
             "model": "exa",
             "messages": [
-                {"role": "system", "content": "You are an AI optimizer. Please optimize the following input:"},
-                {"role": "user", "content": user_input}
+                {"role": "system", "content": "You are an AI optimizer. Please optimize the following input considering the project context:"},
+                {"role": "user", "content": contextual_input}
             ],
             "max_tokens": 150
         }

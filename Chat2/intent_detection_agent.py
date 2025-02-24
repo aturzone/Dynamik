@@ -6,9 +6,9 @@ EXA_ENDPOINT = "https://api.exa.ai/chat/completions"
 class IntentDetectionAgent:
     def __init__(self):
         self.role = "Intent Detector"
-        self.description = "An AI-powered agent that detects user intent."
-        self.goal = "Detect the intent behind user input."
-        self.backstory = "You are an advanced AI designed to detect the intent behind user input for better understanding."
+        self.description = "An AI-powered agent that detects user intent based on optimized input."
+        self.goal = "Detect the intent behind user input after it has been optimized."
+        self.backstory = "You are an advanced AI designed to detect user intent. Your input is the optimized output from the Optimizer Agent, ensuring clarity and completeness."
 
     def respond(self, optimized_input):
         # Headers for the API request
@@ -18,7 +18,7 @@ class IntentDetectionAgent:
         data = {
             "model": "exa",
             "messages": [
-                {"role": "system", "content": "You are an AI intent detector. Please detect the intent behind the following input:"},
+                {"role": "system", "content": "You are an AI intent detector. Your input has already been optimized by another AI agent. Detect the intent behind the following optimized input:"},
                 {"role": "user", "content": optimized_input}
             ],
             "max_tokens": 150
