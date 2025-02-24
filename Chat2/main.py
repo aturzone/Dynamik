@@ -3,7 +3,10 @@ from pydantic import BaseModel
 from typing import Optional
 from crew_ai import CrewAI
 
-crew = CrewAI()
+with open("project_data.txt", "r") as file:
+    project_data = file.read().strip()
+
+crew = CrewAI(project_data)
 
 class UserInput(BaseModel):
     text: str
