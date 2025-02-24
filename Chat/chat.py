@@ -10,7 +10,7 @@ from crewai import Agent, Task
 API_KEY = "6e58c733-2848-4401-90e7-645e46e26699"
 EXA_ENDPOINT = "https://api.exa.ai/chat/completions"
 
-#------------------------AGENTS------------------------#
+#----------AGENTS----------#
 
 class AnalyzerAgent(Agent):
     def __init__(self):
@@ -61,10 +61,18 @@ class ManagerAgent(Agent):
         )
 
     def verify_and_refine(self, user_input, analyzer_response, project_text):
-        # For simplicity, we assume the analyzer response is always correct.
-        return analyzer_response  # In a real-world scenario, additional verification logic would be implemented here.
+        refined_response = self.refine_response(analyzer_response, user_input, project_text)
+        return refined_response  # In a real-world scenario, additional verification logic would be implemented here.
 
-#------------------------TASKS------------------------#
+    def refine_response(self, response, user_input, project_text):
+        # Here we refine the response by formatting and spacing
+        # This is a simple example, and can be expanded with more sophisticated logic if needed
+        paragraphs = response.split('\n')
+        refined_paragraphs = [re.sub(r'\s+', ' ', paragraph).strip() for paragraph in paragraphs]
+        refined_response = '\n\n'.join(refined_paragraphs)
+        return refined_response
+
+#----------TASKS----------#
 
 class AnalyzerTask(Task):
     def __init__(self, analyzer_agent):
@@ -90,7 +98,7 @@ class ManagerTask(Task):
     def execute(self, user_input, analyzer_response, project_text):
         return self.agent.verify_and_refine(user_input, analyzer_response, project_text)
 
-#------------------------CREW------------------------#
+#----------CREW----------#
 
 class CrewAI:
     def __init__(self, project_text):
@@ -114,7 +122,7 @@ class CrewAI:
             final_response = self.manager_task.execute(user_input, analyzer_response, self.project_text)
             print(f"CrewAI: {final_response}")
 
-#------------------------FASTAPI------------------------#
+#----------FASTAPI----------#
 class UserInput(BaseModel):
     text: str
     project_text: Optional[str] = None
@@ -143,4 +151,4 @@ async def chat(user_input: UserInput, request: Request):
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run("Chat:app", host="0.0.0.0", port=8000, reload=True)
+    uvicorn.run("chat:app", host="0.0.0.0", port=8000, reload=True)
