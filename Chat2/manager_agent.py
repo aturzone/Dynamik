@@ -11,7 +11,7 @@ class ManagerAgent:
         self.goal = "Generate a comprehensive response based on user input, detected intent, and project data."
         self.backstory = "You are an advanced AI manager designed to handle various aspects of project management."
         self.current_date = datetime.now().strftime("%Y-%m-%d")
-        self.editor_agent = editor_agent()
+        self.editor_agent = editor_agent
 
     def respond(self, user_input, optimizer_agent, intent_detection_agent):
         

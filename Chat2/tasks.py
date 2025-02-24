@@ -41,8 +41,8 @@ class ManagerTask(Task):
             expected_output="A comprehensive response generated based on the inputs."
         )
 
-    def execute(self, optimized_input, detected_intent):
-        return self.agent.respond(optimized_input, detected_intent)
+    def execute(self, user_input, optimized_input, detected_intent):
+        return self.agent.respond(user_input, optimized_input, detected_intent)
 
 class EditorTask(Task):
     def __init__(self, editor_agent):

@@ -23,7 +23,7 @@ async def chat(user_input: UserInput, request: Request):
 
     optimized_input = crew.optimizer_task.execute(user_input.text)
     detected_intent = crew.intent_detection_task.execute(optimized_input)
-    manager_response = crew.manager_task.execute(optimized_input, detected_intent)
+    manager_response = crew.manager_task.execute(user_input.text, optimized_input, detected_intent)
     final_response = crew.editor_task.execute(manager_response, "Please edit the response for clarity and completeness.")
     
     return {

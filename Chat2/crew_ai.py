@@ -6,13 +6,13 @@ from tasks import OptimizerTask, IntentDetectionTask, ManagerTask, EditorTask
 
 class CrewAI:
     def __init__(self, project_data):
+        self.editor_agent = EditorAgent()
         self.optimizer_agent = OptimizerAgent(project_data)
         self.optimizer_task = OptimizerTask(self.optimizer_agent)
         self.intent_detection_agent = IntentDetectionAgent()
         self.intent_detection_task = IntentDetectionTask(self.intent_detection_agent)
-        self.manager_agent = ManagerAgent()
+        self.manager_agent = ManagerAgent(self.editor_agent)
         self.manager_task = ManagerTask(self.manager_agent)
-        self.editor_agent = EditorAgent()
         self.editor_task = EditorTask(self.editor_agent)
 
     def run(self):
@@ -26,7 +26,7 @@ class CrewAI:
 
             optimized_input = self.optimizer_task.execute(user_input)
             detected_intent = self.intent_detection_task.execute(optimized_input)
-            manager_response = self.manager_task.execute(optimized_input, detected_intent)
+            manager_response = self.manager_task.execute(user_input, optimized_input, detected_intent)
             final_response = self.editor_task.execute(manager_response, "Please edit the response for clarity and completeness.")
             print(f"Optimized Input: {optimized_input}")
             print(f"Detected Intent: {detected_intent}")
