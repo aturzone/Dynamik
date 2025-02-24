@@ -12,38 +12,22 @@ EXA_ENDPOINT = "https://api.exa.ai/chat/completions"
 
 #------------------------AGENTS------------------------#
 
-class ChatAgent(Agent):
+class AnalyzerAgent(Agent):
     def __init__(self):
         super().__init__(
-            role="Chat Assistant",
-            description="An AI-powered chat assistant that provides informative and friendly responses.",
-            goal="Engage users in helpful and meaningful conversations.",
-            backstory="You are an advanced AI chatbot designed to assist users with their inquiries in a friendly and informative manner."
+            role="Analyzer Agent",
+            description="An AI agent that analyzes user input and extracts relevant information from the project text.",
+            goal="Analyze user input and extract accurate information from the project text.",
+            backstory="You are an advanced AI designed to analyze user queries and provide relevant information based on the project text."
         )
 
     def respond(self, user_input, project_text):
-        # پاسخگویی به احوال‌پرسی‌ها
-        if "hi" in user_input.lower() or "hello" in user_input.lower() or "hey" in user_input.lower():
-            return "Hello, I'm sara, an AI manager assistant. How can I help you today?"
-
-        if "how are you" in user_input.lower():
-            return "I'm an AI assistant, so I don't have feelings, but I'm here to help you! How can I assist you today?"
-
-        if "i am sad" in user_input.lower():
-            return "I'm sorry to hear that you're feeling sad. If you'd like to talk about it, I'm here to listen."
-
-        if "bye" in user_input.lower() or "goodbye" in user_input.lower():
-            return "Goodbye! Have a great day!"
-
-        if "thank you" in user_input.lower():
-            return "You're welcome! If you have any other questions, feel free to ask."
-
         headers = {"Authorization": f"Bearer {API_KEY}", "Content-Type": "application/json"}
         data = {
             "model": "exa",
             "messages": [
-                {"role": "system", "content": "you are a helpful AI assistant. Please provide the answer to the following question:"},
-                {"role": "user", "content": f"You are a friendly and informative AI assistant for answer {user_input}. Use the following project details to answer questions related to the project: {project_text}"}
+                {"role": "system", "content": "you are an AI analyzer agent. Analyze the user input and extract relevant information from the project text."},
+                {"role": "user", "content": f"Analyze the following user input: {user_input}. Use the following project details to extract relevant information: {project_text}"}
             ],
             "max_tokens": 150
         }
@@ -67,26 +51,53 @@ class ChatAgent(Agent):
             print(f"❌ Error {response.status_code}: {response.text}")
             return "Sorry, I encountered an issue while processing your request."
 
+class ManagerAgent(Agent):
+    def __init__(self):
+        super().__init__(
+            role="Manager Agent",
+            description="An AI agent that verifies and refines responses provided by the analyzer agent.",
+            goal="Verify and refine responses to ensure accuracy and clarity.",
+            backstory="You are an advanced AI designed to verify and refine responses for accuracy and clarity."
+        )
+
+    def verify_and_refine(self, user_input, analyzer_response, project_text):
+        # For simplicity, we assume the analyzer response is always correct.
+        return analyzer_response  # In a real-world scenario, additional verification logic would be implemented here.
+
 #------------------------TASKS------------------------#
 
-class ChatTask(Task):
-    def __init__(self, chat_agent):
+class AnalyzerTask(Task):
+    def __init__(self, analyzer_agent):
         super().__init__(
-            name="Chat Interaction",
-            description="Process and respond to user queries in a conversational manner.",
-            agent=chat_agent,
-            expected_output="A helpful and informative response to the user query."
+            name="Analyzer Task",
+            description="Analyze user input and extract relevant information from the project text.",
+            agent=analyzer_agent,
+            expected_output="Extracted information from the project text."
         )
 
     def execute(self, user_input, project_text):
         return self.agent.respond(user_input, project_text)
 
+class ManagerTask(Task):
+    def __init__(self, manager_agent):
+        super().__init__(
+            name="Manager Task",
+            description="Verify and refine the response provided by the analyzer agent.",
+            agent=manager_agent,
+            expected_output="Verified and refined response."
+        )
+
+    def execute(self, user_input, analyzer_response, project_text):
+        return self.agent.verify_and_refine(user_input, analyzer_response, project_text)
+
 #------------------------CREW------------------------#
 
 class CrewAI:
     def __init__(self, project_text):
-        self.chat_agent = ChatAgent()
-        self.chat_task = ChatTask(self.chat_agent)
+        self.analyzer_agent = AnalyzerAgent()
+        self.manager_agent = ManagerAgent()
+        self.analyzer_task = AnalyzerTask(self.analyzer_agent)
+        self.manager_task = ManagerTask(self.manager_agent)
         self.project_text = project_text
         self.current_date = datetime.now().strftime("%Y-%m-%d")
 
@@ -99,8 +110,9 @@ class CrewAI:
                 print("Goodbye!")
                 break
 
-            result = self.chat_task.execute(user_input, self.project_text)
-            print(f"CrewAI: {result}")
+            analyzer_response = self.analyzer_task.execute(user_input, self.project_text)
+            final_response = self.manager_task.execute(user_input, analyzer_response, self.project_text)
+            print(f"CrewAI: {final_response}")
 
 #------------------------FASTAPI------------------------#
 class UserInput(BaseModel):
@@ -114,7 +126,7 @@ def read_project_text(file_path):
     with open(file_path, "r") as file:
         return file.read()
 
-project_text = read_project_text("project_details.txt")
+project_text = read_project_text("project_data.txt")
 
 crew = CrewAI(project_text)
 
@@ -125,9 +137,10 @@ async def chat(user_input: UserInput, request: Request):
     print(f"Request headers: {request.headers}")
     print(f"Request body: {await request.body()}")
 
-    response = crew.chat_task.execute(user_input.text, crew.project_text)
-    return {"response": response}
+    analyzer_response = crew.analyzer_task.execute(user_input.text, crew.project_text)
+    final_response = crew.manager_task.execute(user_input.text, analyzer_response, crew.project_text)
+    return {"response": final_response}
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run("chat:app", host="0.0.0.0", port=8000, reload=True)
+    uvicorn.run("Chat:app", host="0.0.0.0", port=8000, reload=True)
