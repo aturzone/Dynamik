@@ -5,8 +5,8 @@ from editor_agent import EditorAgent
 from tasks import OptimizerTask, IntentDetectionTask, ManagerTask, EditorTask
 
 class CrewAI:
-    def __init__(self):
-        self.optimizer_agent = OptimizerAgent()
+    def __init__(self, project_data):
+        self.optimizer_agent = OptimizerAgent(project_data)
         self.optimizer_task = OptimizerTask(self.optimizer_agent)
         self.intent_detection_agent = IntentDetectionAgent()
         self.intent_detection_task = IntentDetectionTask(self.intent_detection_agent)

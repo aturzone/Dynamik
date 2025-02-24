@@ -6,14 +6,14 @@ EXA_ENDPOINT = "https://api.exa.ai/chat/completions"
 
 with open("project_data.txt", "r") as file:
     project_data = file.read().strip()
+
 class OptimizerAgent:
     def __init__(self, project_data):
         self.role = "Optimizer"
         self.description = "An AI-powered agent that optimizes user input based on project data."
-        self.goal = "Optimize user input for clarity and completeness , considering project context."
+        self.goal = "Optimize user input for clarity and completeness, considering project context."
         self.backstory = "You are an advanced AI optimizer designed to enhance user input for better understanding."
         self.project_data = project_data
-        
 
     def respond(self, user_input):
         project_name = self.extract_project_name(user_input)
