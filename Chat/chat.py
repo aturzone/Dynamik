@@ -12,6 +12,43 @@ EXA_ENDPOINT = "https://api.exa.ai/chat/completions"
 
 #----------AGENTS----------#
 
+class IntentDetectionAgent(Agent):
+    def __init__(self):
+        super().__init__(
+            role="Intent Detection Agent",
+            description="An AI agent that detects the user's intent based on their input.",
+            goal="Detect user's intent and decide the next actions.",
+            backstory="You are an advanced AI designed to detect user intent from their input."
+        )
+
+    def detect_intent(self, user_input, project_text):
+        headers = {"Authorization": f"Bearer {API_KEY}", "Content-Type": "application/json"}
+        data = {
+            "model": "exa",
+            "messages": [
+                {"role": "system", "content": "You are an AI intent detection agent. Detect the user's intent based on their input."},
+                {"role": "user", "content": f"Detect the intent of the following user input: {user_input}. Use the following project details for context: {project_text}"}
+            ],
+            "max_tokens": 50
+        }
+
+        response = requests.post(EXA_ENDPOINT, json=data, headers=headers)
+        
+        if response.status_code == 200:
+            response_json = response.json()
+            print("API Response:", response_json)
+
+            if "choices" in response_json and response_json["choices"]:
+                intent = response_json["choices"][0]["message"]["content"].strip()
+                return intent
+
+            else:
+                return "unknown"
+        
+        else:
+            print(f"❌ Error {response.status_code}: {response.text}")
+            return "unknown"
+
 class AnalyzerAgent(Agent):
     def __init__(self):
         super().__init__(
@@ -74,6 +111,18 @@ class ManagerAgent(Agent):
 
 #----------TASKS----------#
 
+class IntentDetectionTask(Task):
+    def __init__(self, intent_detection_agent):
+        super().__init__(
+            name="Intent Detection Task",
+            description="Detect the intent of the user input.",
+            agent=intent_detection_agent,
+            expected_output="Detected intent of the user input."
+        )
+
+    def execute(self, user_input, project_text):
+        return self.agent.detect_intent(user_input, project_text)
+
 class AnalyzerTask(Task):
     def __init__(self, analyzer_agent):
         super().__init__(
@@ -102,8 +151,10 @@ class ManagerTask(Task):
 
 class CrewAI:
     def __init__(self, project_text):
+        self.intent_detection_agent = IntentDetectionAgent()
         self.analyzer_agent = AnalyzerAgent()
         self.manager_agent = ManagerAgent()
+        self.intent_detection_task = IntentDetectionTask(self.intent_detection_agent)
         self.analyzer_task = AnalyzerTask(self.analyzer_agent)
         self.manager_task = ManagerTask(self.manager_agent)
         self.project_text = project_text
@@ -118,9 +169,13 @@ class CrewAI:
                 print("Goodbye!")
                 break
 
-            analyzer_response = self.analyzer_task.execute(user_input, self.project_text)
-            final_response = self.manager_task.execute(user_input, analyzer_response, self.project_text)
-            print(f"CrewAI: {final_response}")
+            intent = self.intent_detection_task.execute(user_input, self.project_text)
+            if "project" in intent:
+                analyzer_response = self.analyzer_task.execute(user_input, self.project_text)
+                final_response = self.manager_task.execute(user_input, analyzer_response, self.project_text)
+                print(f"CrewAI: {final_response}")
+            else:
+                print("CrewAI:not in my data.")
 
 #----------FASTAPI----------#
 class UserInput(BaseModel):
@@ -145,9 +200,13 @@ async def chat(user_input: UserInput, request: Request):
     print(f"Request headers: {request.headers}")
     print(f"Request body: {await request.body()}")
 
-    analyzer_response = crew.analyzer_task.execute(user_input.text, crew.project_text)
-    final_response = crew.manager_task.execute(user_input.text, analyzer_response, crew.project_text)
-    return {"response": final_response}
+    intent = crew.intent_detection_task.execute(user_input.text, crew.project_text)
+    if "project" in intent:
+        analyzer_response = crew.analyzer_task.execute(user_input.text, crew.project_text)
+        final_response = crew.manager_task.execute(user_input.text, analyzer_response, crew.project_text)
+        return {"response": final_response}
+    else:
+        return {"response": "not in my data."}
 
 if __name__ == "__main__":
     import uvicorn
