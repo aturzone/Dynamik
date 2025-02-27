@@ -3,7 +3,6 @@ from datetime import datetime
 from fastapi import FastAPI, Request
 from pydantic import BaseModel
 from typing import Optional
-import re
 from crewai import Agent, Task
 
 # Define API_KEY directly in the code
