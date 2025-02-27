@@ -22,31 +22,35 @@ class IntentDetectionAgent(Agent):
         )
 
     def detect_intent(self, user_input, project_text):
-        headers = {"Authorization": f"Bearer {API_KEY}", "Content-Type": "application/json"}
-        data = {
-            "model": "exa",
-            "messages": [
-                {"role": "system", "content": "You are an AI intent detection agent. Detect the user's intent based on their input."},
-                {"role": "user", "content": f"Detect the intent of the following user input: {user_input}. Use the following project details for context: {project_text}"}
-            ],
-            "max_tokens": 50
-        }
+        try:
+            headers = {"Authorization": f"Bearer {API_KEY}", "Content-Type": "application/json"}
+            data = {
+                "model": "exa",
+                "messages": [
+                    {"role": "system", "content": "You are an AI intent detection agent. Detect the user's intent based on their input."},
+                    {"role": "user", "content": f"Detect the intent of the following user input: {user_input}. Use the following project details for context: {project_text}"}
+                ],
+                "max_tokens": 50
+            }
 
-        response = requests.post(EXA_ENDPOINT, json=data, headers=headers)
-        
-        if response.status_code == 200:
-            response_json = response.json()
-            print("API Response:", response_json)
+            response = requests.post(EXA_ENDPOINT, json=data, headers=headers)
+            
+            if response.status_code == 200:
+                response_json = response.json()
+                print("API Response:", response_json)
 
-            if "choices" in response_json and response_json["choices"]:
-                intent = response_json["choices"][0]["message"]["content"].strip()
-                return intent
+                if "choices" in response_json and response_json["choices"]:
+                    intent = response_json["choices"][0]["message"]["content"].strip()
+                    return intent
 
+                else:
+                    return "unknown"
+            
             else:
+                print(f"❌ Error {response.status_code}: {response.text}")
                 return "unknown"
-        
-        else:
-            print(f"❌ Error {response.status_code}: {response.text}")
+        except requests.exceptions.RequestException as e:
+            print(f"Network error: {e}")
             return "unknown"
 
 class AnalyzerAgent(Agent):
@@ -54,39 +58,41 @@ class AnalyzerAgent(Agent):
         super().__init__(
             role="Analyzer Agent",
             description="An AI agent that analyzes user input and extracts relevant information from the project text.",
-            goal="Analyze user input and extract accurate information from the project text.",
+            goal="Analyze user input and extract accurate information from the project text. Format the response as a professional Markdown document.",
             backstory="You are an advanced AI designed to analyze user queries and provide relevant information based on the project text."
         )
 
     def respond(self, user_input, project_text):
-        headers = {"Authorization": f"Bearer {API_KEY}", "Content-Type": "application/json"}
-        data = {
-            "model": "exa",
-            "messages": [
-                {"role": "system", "content": "you are an AI analyzer agent. Analyze the user input and extract relevant information from the project text."},
-                {"role": "user", "content": f"Analyze the following user input: {user_input}. Use the following project details to extract relevant information: {project_text}"}
-            ],
-            "max_tokens": 150
-        }
+        try:
+            headers = {"Authorization": f"Bearer {API_KEY}", "Content-Type": "application/json"}
+            data = {
+                "model": "exa",
+                "messages": [
+                    {"role": "system", "content": "You are an AI analyzer agent. Analyze the user input and extract relevant information from the project text. Format the response as a professional Markdown document with appropriate headings, bold text, and links."},
+                    {"role": "user", "content": f"Analyze the following user input: {user_input}. Use the following project details to extract relevant information and format the response as a Markdown document: {project_text}"}
+                ],
+                "max_tokens": 150
+            }
 
-        response = requests.post(EXA_ENDPOINT, json=data, headers=headers)
-        
-        if response.status_code == 200:
-            response_json = response.json()
-            print("API Response:", response_json)
+            response = requests.post(EXA_ENDPOINT, json=data, headers=headers)
+            
+            if response.status_code == 200:
+                response_json = response.json()
+                print("API Response:", response_json)
 
-            if "choices" in response_json and response_json["choices"]:
-                raw_answer = response_json["choices"][0]["message"]["content"].strip()
-                clean_answer = re.sub(r'http[s]?://\S+', '', raw_answer)
-                clean_answer = re.sub(r'\s+', ' ', clean_answer).strip()
-                return clean_answer
+                if "choices" in response_json and response_json["choices"]:
+                    raw_answer = response_json["choices"][0]["message"]["content"].strip()
+                    return raw_answer
 
+                else:
+                    return "I'm not sure how to respond to that."
+            
             else:
-                return "I'm not sure how to respond to that."
-        
-        else:
-            print(f"❌ Error {response.status_code}: {response.text}")
-            return "Sorry, I encountered an issue while processing your request."
+                print(f"❌ Error {response.status_code}: {response.text}")
+                return "Sorry, I encountered an issue while processing your request."
+        except requests.exceptions.RequestException as e:
+            print(f"Network error: {e}")
+            return "Sorry, I encountered a network issue while processing your request."
 
 class ManagerAgent(Agent):
     def __init__(self):
@@ -98,16 +104,7 @@ class ManagerAgent(Agent):
         )
 
     def verify_and_refine(self, user_input, analyzer_response, project_text):
-        refined_response = self.refine_response(analyzer_response, user_input, project_text)
-        return refined_response  # In a real-world scenario, additional verification logic would be implemented here.
-
-    def refine_response(self, response, user_input, project_text):
-        # Here we refine the response by formatting and spacing
-        # This is a simple example, and can be expanded with more sophisticated logic if needed
-        paragraphs = response.split('\n')
-        refined_paragraphs = [re.sub(r'\s+', ' ', paragraph).strip() for paragraph in paragraphs]
-        refined_response = '\n\n'.join(refined_paragraphs)
-        return refined_response
+        return analyzer_response  # In a real-world scenario, additional verification logic would be implemented here.
 
 #----------TASKS----------#
 
@@ -175,7 +172,7 @@ class CrewAI:
                 final_response = self.manager_task.execute(user_input, analyzer_response, self.project_text)
                 print(f"CrewAI: {final_response}")
             else:
-                print("CrewAI:not in my data.")
+                print("CrewAI: not in my data.")
 
 #----------FASTAPI----------#
 class UserInput(BaseModel):
